@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 void print_options(void);
 int analyze_argment(int argc, char *argv[]);
+uint32_t hash_calc(char *word);
 
 int option_s_flag = 0;
 int option_f_flag = 0;
@@ -12,6 +14,18 @@ int option_w_flag = 0;
 char *prefix = NULL;
 int top_n = 0;
 char *specific_word = NULL;
+
+// 1つのユニークな単語に対して1ノード
+typedef struct hash_node {
+    char *word;
+    // 単語の出現回数
+    int count;
+    // 単語の出現位置の配列へのポインタ
+    int *positions;
+    // 単語の出現位置の配列で現状何箇所分の容量を保持しているか
+    int capacity;
+    hash_node *next;
+} hash_node;
 
 
 int main(int argc, char *argv[]) {
@@ -87,4 +101,14 @@ int analyze_argment(int argc, char *argv[]) {
         }
     }
     return 0;
+}
+
+// hash値を計算する関数
+uint32_t hash_calc(char *word) {
+    uint32_t hash = 5381;
+    while(*word != '\0') {
+        hash = hash * 33u + (unsigned char) *word;
+        word++;
+    }
+    return hash % 1000000;
 }
