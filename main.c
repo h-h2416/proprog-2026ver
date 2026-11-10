@@ -27,22 +27,47 @@ typedef struct hash_node {
     hash_node *next;
 } hash_node;
 
+#define BUF_SIZE 1024
+#define WORD_SIZE 128
+
 
 int main(int argc, char *argv[]) {
     // 引数の解析
     char *filename = argv[1];
     FILE *fp = fopen(filename, "r");
     if (fp == NULL){
-        perror("argument error:");
+        perror("argument error");
         return 1;
     }
     if (analyze_argment(argc, argv) == 1) {
         return 1;
     }
-    
+    // ファイルの中身の処理
+    int bytes_read;
+    char buf[BUF_SIZE];
+    char word[WORD_SIZE];
+    int word_len = 0;
+    while((bytes_read = fread(buf, 1, BUF_SIZE, fp)) > 0) {
+        // bufの処理
+        int i = 0;
+        while(i < bytes_read) {
+            if(isalpha((unsigned char) buf[i])) {
+                word[word_len++] = buf[i++];
+            } else if (word_len > 0) {
+                word[word_len] = '\0';
+                // 取り出したwordの処理、次ここからやる
 
-    
-
+                word_len = 0;
+            }
+        }
+    }
+    // EOFで終わった単語を処理するためにもう一回
+    if (word_len > 0) {
+        word[word_len] = '\0';
+        // 取り出したwordの処理、次ここからやる
+        
+        word_len = 0;
+    }
 
     return 0;
 }
