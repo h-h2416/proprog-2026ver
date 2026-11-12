@@ -4,9 +4,7 @@
 #include <stdint.h>
 #include <ctype.h>
 
-void print_options(void);
-int analyze_argment(int argc, char *argv[]);
-uint32_t hash_calc(char *word);
+
 
 int option_s_flag = 0;
 int option_f_flag = 0;
@@ -23,17 +21,26 @@ typedef struct hash_node {
     int count;
     // 単語の出現位置の配列へのポインタ
     int *positions;
-    // 単語の出現位置の配列で現状何箇所分の容量を保持しているか
+    // 単語の出現位置の配列で現状何出現分の容量を保持しているか
     int capacity;
     struct hash_node *next;
 } hash_node;
 
 #define BUF_SIZE 1024 // テスト用に4にした。あとで1024に戻す
 #define WORD_SIZE 128
+#define HASH_TABLE_SIZE 1000000
+
+
+void print_options(void);
+int analyze_argment(int argc, char *argv[]);
+uint32_t hash_calc(char *word);
+void add_hash_node(hash_node *tail_node, char *word, int word_position);
+void add_word(hash_node *hash_table[], char *word, int word_position);
 
 
 int main(int argc, char *argv[]) {
     // 引数の解析
+    hash_node *hash_table[HASH_TABLE_SIZE] = {NULL};
     char *filename = argv[1];
     FILE *fp = fopen(filename, "r");
     if (fp == NULL){
@@ -49,23 +56,31 @@ int main(int argc, char *argv[]) {
     char word[WORD_SIZE];
     int word_len = 0;
     int pre_bytes_read = 0;
+    int position_count = 1;
+    int word_position = 1;
     while((bytes_read = fread(buf, 1, BUF_SIZE, fp)) > 0) {
         // bufの処理
         int i = 0;
         while(i < bytes_read) {
             if(isalpha((unsigned char) buf[i])) {
+                // printf("%d\n", position_count); // デバッグ用
                 word[word_len++] = buf[i++];
+                position_count++;
             }else {
                 int end = word_len;
                 while(i < bytes_read && !(isalpha((unsigned char) buf[i]))) {
                     i++;
+                    position_count++;
                     word[end] = '\0';
                     word_len = 0;
                 }
                 if ((strcmp(word,"\0"))){
                     printf("%s\n",word); //デバッグ用
+                    //printf("%d\n", position_count); // デバッグ用
                     // 取り出したwordの処理
-
+                    //printf("%d\n", word_position); // デバッグ用
+                    add_word(hash_table, word, word_position);
+                    word_position = position_count;
                 } else{continue;}
             }
         }
@@ -73,12 +88,14 @@ int main(int argc, char *argv[]) {
     }
     // EOFで終わった単語を処理するためにもう一回
     if ((strcmp(word,"\0")) && isalpha((unsigned char)buf[pre_bytes_read - 1])){
-        // printf("%s\n",word); //デバッグ用
+        printf("%s\n",word); //デバッグ用
+        //printf("%d\n", position_count); // デバッグ用
         // 取り出したwordの処理
-
+        // printf("%d\n", word_position); // デバッグ用
+        add_word(hash_table, word, word_position);
+        word_position = position_count;
     }
     
-
     return 0;
 }
 
@@ -145,5 +162,63 @@ uint32_t hash_calc(char *word) {
         hash = hash * 33u + (unsigned char) *word;
         word++;
     }
-    return hash % 1000000;
+    return hash % HASH_TABLE_SIZE;
+}
+
+// 追加の必要性が確定した前提
+void add_hash_node(hash_node *tail_node, char *word, int word_position) {
+    if (tail_node == NULL) {
+        tail_node = malloc(sizeof(hash_node));
+        if (tail_node = NULL) {
+            perror("malloc");
+        }
+    } else {
+        tail_node -> next = malloc(sizeof(hash_node));
+        if (tail_node -> next = NULL) {
+            perror("malloc");
+        }
+    
+    }
+    // 構造体の中身の更新
+    tail_node -> next -> word = malloc(sizeof(strlen(word) + 1));
+    if( tail_node -> next -> word = NULL) perror("malloc");
+    strcpy(tail_node -> next -> word, word);
+    tail_node -> next -> count = 1;
+    tail_node -> next -> positions = malloc(sizeof(int) * 8);
+    if(tail_node -> next -> positions = NULL) perror("malloc");
+    tail_node -> next -> positions[0] = word_position;
+    tail_node -> next -> capacity = 7;
+    tail_node -> next -> next = NULL;
+}
+
+// 得た単語の処理をする関数
+void add_word(hash_node *hash_table[], char *word, int word_position) {
+    uint32_t hash_index = hash_calc(word);
+    // テーブルのインデックスがまだ埋まってなかった時
+    if (hash_table[hash_index] == NULL) {
+        add_hash_node(NULL, word, word_position);
+    // 埋まってた時
+    } else {
+        hash_node *aim_node = hash_table[hash_index];
+        while(aim_node -> next != NULL && strcmp(word, aim_node -> word)) {
+            aim_node = aim_node -> next;
+        }
+        if (aim_node -> next == NULL) {
+            add_hash_node(aim_node, word, word_position);
+        }
+        if (strcmp(word, aim_node -> word)) {
+            aim_node -> count++;
+            if (aim_node -> capacity != aim_node -> count) {
+                aim_node -> positions[aim_node -> count - 1] = word_position; 
+            } else {
+                aim_node -> count ++;
+                aim_node -> capacity += 8;
+                int *tmp = realloc(aim_node, aim_node -> capacity * sizeof(int));
+                if (tmp == NULL) perror("realloc");
+                aim_node -> positions = tmp;
+                aim_node -> positions[aim_node -> count - 1] = word_position; 
+
+            }
+        }
+    }
 }

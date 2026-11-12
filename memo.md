@@ -41,5 +41,19 @@ Found 4 matches:
 Found 2 words
   position 1,7
 
-## 方針
-1 コマンドを受け取る
+## 一時メモ
+ノードを追加する関数
+ノードを追加するかするかどうか検討するのはmain
+ノードにpositionの追加が必要か判断する関数
+
+## 構造体
+typedef struct hash_node {
+    char *word;
+    // 単語の出現回数
+    int count;
+    // 単語の出現位置の配列へのポインタ
+    int *positions;
+    // 単語の出現位置の配列で現状何出現分の容量を保持しているか
+    int capacity;
+    struct hash_node *next;
+} hash_node;
