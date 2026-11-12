@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <ctype.h>
 
 void print_options(void);
 int analyze_argment(int argc, char *argv[]);
@@ -24,10 +25,10 @@ typedef struct hash_node {
     int *positions;
     // 単語の出現位置の配列で現状何箇所分の容量を保持しているか
     int capacity;
-    hash_node *next;
+    struct hash_node *next;
 } hash_node;
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 1024 // テスト用に4にした。あとで1024に戻す
 #define WORD_SIZE 128
 
 
@@ -43,31 +44,40 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     // ファイルの中身の処理
-    int bytes_read;
+    int bytes_read = 0;
     char buf[BUF_SIZE];
     char word[WORD_SIZE];
     int word_len = 0;
+    int pre_bytes_read = 0;
     while((bytes_read = fread(buf, 1, BUF_SIZE, fp)) > 0) {
         // bufの処理
         int i = 0;
         while(i < bytes_read) {
             if(isalpha((unsigned char) buf[i])) {
                 word[word_len++] = buf[i++];
-            } else if (word_len > 0) {
-                word[word_len] = '\0';
-                // 取り出したwordの処理、次ここからやる
+            }else {
+                int end = word_len;
+                while(i < bytes_read && !(isalpha((unsigned char) buf[i]))) {
+                    i++;
+                    word[end] = '\0';
+                    word_len = 0;
+                }
+                if ((strcmp(word,"\0"))){
+                    printf("%s\n",word); //デバッグ用
+                    // 取り出したwordの処理
 
-                word_len = 0;
+                } else{continue;}
             }
         }
+        pre_bytes_read = bytes_read;
     }
     // EOFで終わった単語を処理するためにもう一回
-    if (word_len > 0) {
-        word[word_len] = '\0';
-        // 取り出したwordの処理、次ここからやる
-        
-        word_len = 0;
+    if ((strcmp(word,"\0")) && isalpha((unsigned char)buf[pre_bytes_read - 1])){
+        // printf("%s\n",word); //デバッグ用
+        // 取り出したwordの処理
+
     }
+    
 
     return 0;
 }
