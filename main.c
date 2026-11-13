@@ -34,7 +34,7 @@ typedef struct hash_node {
 void print_options(void);
 int analyze_argment(int argc, char *argv[]);
 uint32_t hash_calc(char *word);
-void add_hash_node(hash_node *tail_node, char *word, int word_position);
+void add_hash_node(hash_node *hash_table[], hash_node *tail_node, char *word, int word_position);
 void add_word(hash_node *hash_table[], char *word, int word_position);
 
 
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
                     word_len = 0;
                 }
                 if ((strcmp(word,"\0"))){
-                    printf("%s\n",word); //デバッグ用
+                // printf("%s\n",word); //デバッグ用
                     //printf("%d\n", position_count); // デバッグ用
                     // 取り出したwordの処理
                     //printf("%d\n", word_position); // デバッグ用
@@ -88,13 +88,14 @@ int main(int argc, char *argv[]) {
     }
     // EOFで終わった単語を処理するためにもう一回
     if ((strcmp(word,"\0")) && isalpha((unsigned char)buf[pre_bytes_read - 1])){
-        printf("%s\n",word); //デバッグ用
+        // printf("%s\n",word); //デバッグ用
         //printf("%d\n", position_count); // デバッグ用
         // 取り出したwordの処理
         // printf("%d\n", word_position); // デバッグ用
         add_word(hash_table, word, word_position);
         word_position = position_count;
     }
+    
     
     return 0;
 }
@@ -166,29 +167,34 @@ uint32_t hash_calc(char *word) {
 }
 
 // 追加の必要性が確定した前提
-void add_hash_node(hash_node *tail_node, char *word, int word_position) {
+// 衝突してなければtail_nodeはNULL、衝突してるときはhash_tableは使わない
+void add_hash_node(hash_node *hash_table[], hash_node *tail_node, char *word, int word_position) {
+    hash_node *tmp_node = NULL;
     if (tail_node == NULL) {
-        tail_node = malloc(sizeof(hash_node));
-        if (tail_node = NULL) {
+        int hash_index = hash_calc(word);
+        hash_table[hash_index] = malloc(sizeof(hash_node));
+        if (hash_table[hash_index] == NULL) {
             perror("malloc");
         }
+        tmp_node = hash_table[hash_index];
     } else {
         tail_node -> next = malloc(sizeof(hash_node));
-        if (tail_node -> next = NULL) {
+        if (tail_node -> next == NULL) {
             perror("malloc");
         }
+        tmp_node = tail_node -> next;
     
     }
     // 構造体の中身の更新
-    tail_node -> next -> word = malloc(sizeof(strlen(word) + 1));
-    if( tail_node -> next -> word = NULL) perror("malloc");
-    strcpy(tail_node -> next -> word, word);
-    tail_node -> next -> count = 1;
-    tail_node -> next -> positions = malloc(sizeof(int) * 8);
-    if(tail_node -> next -> positions = NULL) perror("malloc");
-    tail_node -> next -> positions[0] = word_position;
-    tail_node -> next -> capacity = 7;
-    tail_node -> next -> next = NULL;
+    tmp_node -> word = malloc((strlen(word) + 1) * sizeof(char));
+    if( tmp_node -> word == NULL) perror("malloc");
+    strcpy(tmp_node -> word, word);
+    tmp_node -> count = 1;
+    tmp_node -> positions = malloc(sizeof(int) * 8);
+    if(tmp_node -> positions == NULL) perror("malloc");
+    tmp_node -> positions[0] = word_position;
+    tmp_node -> capacity = 7;
+    tmp_node -> next = NULL;
 }
 
 // 得た単語の処理をする関数
@@ -196,7 +202,7 @@ void add_word(hash_node *hash_table[], char *word, int word_position) {
     uint32_t hash_index = hash_calc(word);
     // テーブルのインデックスがまだ埋まってなかった時
     if (hash_table[hash_index] == NULL) {
-        add_hash_node(NULL, word, word_position);
+        add_hash_node(hash_table, NULL, word, word_position);
     // 埋まってた時
     } else {
         hash_node *aim_node = hash_table[hash_index];
@@ -204,7 +210,7 @@ void add_word(hash_node *hash_table[], char *word, int word_position) {
             aim_node = aim_node -> next;
         }
         if (aim_node -> next == NULL) {
-            add_hash_node(aim_node, word, word_position);
+            add_hash_node(hash_table, aim_node, word, word_position);
         }
         if (strcmp(word, aim_node -> word)) {
             aim_node -> count++;
