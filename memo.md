@@ -53,7 +53,11 @@ typedef struct hash_node {
     int count;
     // 単語の出現位置の配列へのポインタ
     int *positions;
-    // 単語の出現位置の配列で現状何出現分の容量を保持しているか
+    // 単語の出現位置の配列で現状何インデックス分の容量を保持しているか
     int capacity;
     struct hash_node *next;
 } hash_node;
+
+## mallocリスト
+longest,shortestの単語を入れるやつ
+hash_table
