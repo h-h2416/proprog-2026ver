@@ -5,7 +5,7 @@
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
-      "args": ["./testcase/input.txt","-s","-t","2","-f","pro","-w","cat"],
+      "args": ["./testcase/large_random_article.txt","-t","2","-f","prochro","-w","cat"],
       "stopAtEntry": false,
       "externalConsole": false,
       "cwd": "/home/h_h2416/proprog/2026ver",

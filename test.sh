@@ -15,6 +15,6 @@ for input in ./testcase/*; do
     fi
 
     echo "=== $input ==="
-    ./a.out "$input" -s -t 2 -f pro -w cat
+    ./a.out "$input" -t 2 -f prochro -w cat
     echo
 done

@@ -37,6 +37,8 @@ uint32_t hash_calc(char *word);
 void add_hash_node(hash_node *hash_table[], hash_node *tail_node, char *word, int word_position);
 void add_word(hash_node *hash_table[], char *word, int word_position);
 void print_s_flag(hash_node *hash_table[], int position_count);
+void string_tolower(char *word);
+void print_f_flag(hash_node *hash_table[]);
 
 
 int main(int argc, char *argv[]) {
@@ -80,6 +82,7 @@ int main(int argc, char *argv[]) {
                     //printf("%d\n", position_count); // デバッグ用
                     // 取り出したwordの処理
                     //printf("%d\n", word_position); // デバッグ用
+                    string_tolower(word);
                     add_word(hash_table, word, word_position);
                     word_position = position_count;
                 } else{continue;}
@@ -93,12 +96,19 @@ int main(int argc, char *argv[]) {
         //printf("%d\n", position_count); // デバッグ用
         // 取り出したwordの処理
         // printf("%d\n", word_position); // デバッグ用
+        string_tolower(word);
         add_word(hash_table, word, word_position);
         word_position = position_count;
     }
+    // オプション処理
     if (option_s_flag){
         print_s_flag(hash_table, position_count);
     }
+
+    if (option_f_flag){
+        print_f_flag(hash_table);
+    }
+
     // デバッグ用。構造体の中身を表示
     # if 0
     for (int i = 0; i < HASH_TABLE_SIZE; i++) {
@@ -234,10 +244,11 @@ void add_word(hash_node *hash_table[], char *word, int word_position) {
         // 該当する単語があった
         else if (!strcmp(word, aim_node -> word)) {
             aim_node -> count++;
-            if (aim_node -> capacity != aim_node -> count) {
+            // capacity 8n-1,count 8n+1でないとき
+            if (aim_node -> capacity != aim_node -> count - 2) {
                 aim_node -> positions[aim_node -> count - 1] = word_position; 
             } else {
-                aim_node -> count ++;
+                // count 8n+1のとき
                 aim_node -> capacity += 8;
                 int *tmp = realloc(aim_node -> positions, aim_node -> capacity * sizeof(int));
                 if (tmp == NULL) perror("realloc");
@@ -301,4 +312,39 @@ void print_s_flag (hash_node *hash_table[], int position_count) {
     }
     printf("(%d character%s)\n", 
         shortest_word_length, shortest_word_length == 1 ? "" : "s");
+}
+
+void string_tolower(char *word) {
+    for (int i = 0; word[i] != '\0'; i++) {
+        word[i] = (char) tolower((unsigned char)word[i]);
+    }
+}
+
+void print_f_flag(hash_node *hash_table[]) {
+    printf("=== WORDS STARTING WITH \"%s\" ===\n", prefix);
+    int match_count = 0;
+    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+        hash_node *node = hash_table[i];
+        while(node != NULL) {
+            if (strncmp(node -> word, prefix, strlen(prefix)) == 0) {
+                match_count += node -> count;
+            }
+            node = node -> next;
+        }
+    }
+    printf("Found %d matches:\n", match_count);
+    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+        hash_node *node = hash_table[i];
+        while(node != NULL) {
+            if (strncmp(node -> word, prefix, strlen(prefix)) == 0) {
+                printf("- \"%s\" (position ", node -> word);
+                for (int j = 0; j < node -> count - 1; j++) {
+                    printf("%d, ",node -> positions[j]);
+                }
+                printf("%d)\n", node -> positions[node -> count - 1]);
+            }
+
+            node = node -> next;
+        }
+    }
 }
