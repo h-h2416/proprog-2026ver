@@ -386,13 +386,13 @@ void print_w_flag(hash_node *hash_table[]) {
         i++;
     }
     if(exist_flag) {
-        printf("Found %d words (position ", count);
+        printf("Found %d word%s (position ", count, count == 1 ? "" : "s");
         for (int j = 0; j < node -> count - 1; j++) {
             printf("%d, ",node -> positions[j]);
         }
         printf("%d)\n", node -> positions[node -> count - 1]);
     } else {
-        printf("Found %d words\n", count);
+        printf("Found %d word\n", count);
     }
 
 }

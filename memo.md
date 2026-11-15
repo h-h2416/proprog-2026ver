@@ -59,5 +59,4 @@ typedef struct hash_node {
 } hash_node;
 
 ## mallocリスト
-longest,shortestの単語を入れるやつ
 hash_table
