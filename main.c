@@ -41,6 +41,7 @@ void string_tolower(char *word);
 void print_f_flag(hash_node *hash_table[]);
 void print_t_flag(hash_node *hash_table[]);
 void print_w_flag(hash_node *hash_table[]);
+void free_hash_table(hash_node *hash_table[]);
 
 
 int main(int argc, char *argv[]) {
@@ -119,6 +120,7 @@ int main(int argc, char *argv[]) {
         print_w_flag(hash_table);
     }
 
+    free_hash_table(hash_table);
     // デバッグ用。構造体の中身を表示
     # if 0
     for (int i = 0; i < HASH_TABLE_SIZE; i++) {
@@ -393,4 +395,17 @@ void print_w_flag(hash_node *hash_table[]) {
         printf("Found %d words\n", count);
     }
 
+}
+
+void free_hash_table(hash_node *hash_table[]) {
+    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+        hash_node *node = hash_table[i];
+        while(node != NULL) {
+            free(node -> word);
+            free(node -> positions);
+            hash_node *tmp = node;
+            node = node -> next;
+            free(tmp);
+        }
+    }
 }
