@@ -39,6 +39,8 @@ void add_word(hash_node *hash_table[], char *word, int word_position);
 void print_s_flag(hash_node *hash_table[], int position_count);
 void string_tolower(char *word);
 void print_f_flag(hash_node *hash_table[]);
+void print_t_flag(hash_node *hash_table[]);
+void print_w_flag(hash_node *hash_table[]);
 
 
 int main(int argc, char *argv[]) {
@@ -107,6 +109,14 @@ int main(int argc, char *argv[]) {
 
     if (option_f_flag){
         print_f_flag(hash_table);
+    }
+
+    if (option_t_flag){
+        print_t_flag(hash_table);
+    }
+
+    if (option_w_flag){
+        print_w_flag(hash_table);
     }
 
     // デバッグ用。構造体の中身を表示
@@ -347,4 +357,40 @@ void print_f_flag(hash_node *hash_table[]) {
             node = node -> next;
         }
     }
+}
+
+void print_t_flag(hash_node *hash_table[]) {
+    
+}
+
+void print_w_flag(hash_node *hash_table[]) {
+    printf("===RESULT OF SEARCHING \"%s\"===\n", specific_word);
+    int exist_flag = 0;
+    int count = 0;
+    hash_node *node;
+    int i = 0;
+    // 最後まで捜査し終えてないかつ単語が見つかっていない
+    while(i < HASH_TABLE_SIZE) {
+        node = hash_table[i];
+        while(node != NULL) {
+            if (strcmp(specific_word, node -> word) == 0) {
+                exist_flag = 1;
+                count = node -> count;
+                break;
+            }
+            node = node -> next;
+        }
+        if (node != NULL && strcmp(specific_word, node -> word) == 0) break;
+        i++;
+    }
+    if(exist_flag) {
+        printf("Found %d words (position ", count);
+        for (int j = 0; j < node -> count - 1; j++) {
+            printf("%d, ",node -> positions[j]);
+        }
+        printf("%d)\n", node -> positions[node -> count - 1]);
+    } else {
+        printf("Found %d words\n", count);
+    }
+
 }
