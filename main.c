@@ -42,6 +42,10 @@ void print_f_flag(hash_node *hash_table[]);
 void print_t_flag(hash_node *hash_table[]);
 void print_w_flag(hash_node *hash_table[]);
 void free_hash_table(hash_node *hash_table[]);
+void min_heap(hash_node *hash_table[], hash_node *heap_table[]);
+void exchange_hash_node (hash_node **ptr1, hash_node **ptr2);
+void heap_arrange(hash_node *heap_table[]);
+void bubble_sort(hash_node *heap_table[]);
 
 
 int main(int argc, char *argv[]) {
@@ -362,7 +366,40 @@ void print_f_flag(hash_node *hash_table[]) {
 }
 
 void print_t_flag(hash_node *hash_table[]) {
-    
+    printf("=== TOP %d WORDS ===\n", top_n);
+    hash_node **heap_table = malloc(sizeof(hash_node*) * top_n);
+    for(int i = 0; i < top_n; i++){
+        heap_table[i] = NULL;
+    }
+    min_heap(hash_table, heap_table);
+    bubble_sort(heap_table);
+    int min_count = heap_table[0] -> count;
+    int heap_len = 0;
+    while(heap_table[heap_len] != NULL){
+        heap_len++;
+    }
+    int ranking = 1;
+    int index = heap_len - 1;
+    while(index >= 0 && heap_table[index] -> count != min_count){
+        int occurrence = heap_table[index] -> count;
+        while(occurrence == heap_table[index] -> count){
+            printf("%d.\"%s\"- %d occurrence%s\n",ranking, heap_table[index] -> word,
+                heap_table[index] -> count, heap_table[index] -> count == 1? "":"s");
+            index--;
+        }
+        ranking++;
+    }
+    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+        hash_node *node = hash_table[i];
+        while(node != NULL) {
+            if(hash_table[i] -> count == min_count){
+                printf("%d.\"%s\"- %d occurrence%s\n",ranking, hash_table[i] -> word,
+                    hash_table[i] -> count, hash_table[i] -> count == 1? "":"s");
+            }
+            node = node -> next;
+        }
+    }
+    free(heap_table);
 }
 
 void print_w_flag(hash_node *hash_table[]) {
@@ -406,6 +443,85 @@ void free_hash_table(hash_node *hash_table[]) {
             hash_node *tmp = node;
             node = node -> next;
             free(tmp);
+        }
+    }
+}
+
+// heap_tableの配列は確保されていてNULL前提、要素数top_n
+void min_heap(hash_node *hash_table[], hash_node *heap_table[]){
+    int heap_count = 0;
+    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+        hash_node *node = hash_table[i];
+        while(node != NULL) {
+            // heap_tableが埋まってない時
+            if (heap_count < top_n) {
+                heap_table[heap_count] = node;
+                int index = heap_count;
+                // 並べ替え
+                while(index != 0 && heap_table[index] -> count < heap_table[(index-1)/2] -> count) {
+                    exchange_hash_node(&heap_table[index], &heap_table[(index-1)/2]);
+                    index = (index-1)/2;
+                }
+                heap_count++;
+            // heap_tableが埋まってる時
+            } else {
+                if (node -> count > heap_table[0] -> count){
+                    heap_table[0] = node;
+                    // 並べ替え
+                    heap_arrange(heap_table);
+                }
+            }
+            node = node -> next;
+        }
+    }
+}
+
+void exchange_hash_node (hash_node **ptr1, hash_node **ptr2) {
+    hash_node *tmp = *ptr1;
+    *ptr1 = *ptr2;
+    *ptr2 = tmp;
+}
+
+void heap_arrange(hash_node *heap_table[]){
+    int index = 0;
+    int change_flag = 1;
+    
+    while(2 * index + 1 < top_n) {                       
+            // 左側の子のほうが小さい時
+        if(2 * index + 2 < top_n
+            && heap_table[2 * index + 1] -> count <= heap_table[2 * index + 2] -> count
+            && heap_table[index] -> count > heap_table[2 * index + 1] -> count){
+            exchange_hash_node(&heap_table[index], &heap_table[2*index+1]);
+        
+        // 右側の子のほうが小さい時 
+        }else if(2 * index + 2 < top_n
+            && heap_table[2 * index + 1] -> count > heap_table[2 * index + 2] -> count
+            && heap_table[index] -> count > heap_table[2 * index + 2] -> count){
+            exchange_hash_node(&heap_table[index], &heap_table[2*index+2]);
+        // 2 * index + 2の要素がない時
+        }else if(heap_table[index] -> count > heap_table[2 * index + 1] -> count) {
+            exchange_hash_node(&heap_table[index], &heap_table[2*index+1]);
+        // 入れ替え終わりの判定
+        }else {
+            change_flag = 0;
+        }
+        if(change_flag == 0){
+            break;
+        }
+        index = 2 * index + 1;
+    }
+}
+
+void bubble_sort(hash_node *heap_table[]) {
+    int heap_len = 0;
+    while(heap_table[heap_len] != NULL){
+        heap_len++;
+    }
+    for(int i = 0; i < heap_len - 1; i++) {
+        for (int j = heap_len - 1; j >= i + 1; j--) {
+            if (heap_table[j] -> count < heap_table[j - 1] -> count) {
+                exchange_hash_node(&heap_table[j],&heap_table[j-1]);
+            }
         }
     }
 }
